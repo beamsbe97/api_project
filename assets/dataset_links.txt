@@ -1,0 +1,14 @@
+#Music
+https://www.dropbox.com/s/aihhp0fkboefxy3/mus-sample.zip?dl=1
+http://hdl.handle.net/10230/42015
+
+
+#Environment
+https://github.com/mdeff/fma   (download zip)
+
+#Voice
+https://commonvoice.mozilla.org/datasets Common voice dataset ( but its removed ;-;) -> https://datacollective.mozillafoundation.org/  mightfind one here
+https://github.com/microsoft/DNS-Challenge/   reference  [10]
+
+#Audio Input
+From the AWF workshop
