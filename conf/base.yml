@@ -29,7 +29,7 @@ AdamW.lr: 0.0001
 ExponentialLR.gamma: 0.999996
 
 amp: false
-val_batch_size: 100
+val_batch_size: 50
 device: cuda
 num_iters: 250000
 save_iters: [10000, 50000, 100000, 200000]
@@ -69,7 +69,7 @@ MelSpectrogramLoss.clamp_eps: 1.0e-5
 MelSpectrogramLoss.mag_weight: 0.0
 
 # Data
-batch_size: 72
+batch_size: 16
 train/AudioDataset.duration: 0.38
 train/AudioDataset.n_examples: 10000000
 
