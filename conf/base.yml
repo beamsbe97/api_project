@@ -88,9 +88,9 @@ train/build_dataset.folders:
   music_hq:
     - /data/s4561341/api/train
 
-# val/build_dataset.folders:
-#   music_hq:
-#     - /data/musdb/test
+val/build_dataset.folders:
+  music_hq:
+    - /data/musdb/test
 
 test/build_dataset.folders:
   music_hq:
