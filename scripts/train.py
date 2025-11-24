@@ -19,7 +19,7 @@ from audiotools.ml.decorators import when
 from torch.utils.tensorboard import SummaryWriter
 
 import dac
-
+torch.cuda.empty_cache()
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # Enable cudnn autotuner to speed up training
