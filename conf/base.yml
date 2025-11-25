@@ -12,7 +12,7 @@ DAC.codebook_dim: 8
 DAC.quantizer_dropout: 1.0
 
 # Discriminator
-Discriminator.sample_rate: 44100
+Discriminator.sample_rate: 4410
 Discriminator.rates: []
 Discriminator.periods: [2, 3, 5, 7, 11]
 Discriminator.fft_sizes: [2048, 1024, 512]
@@ -31,10 +31,10 @@ ExponentialLR.gamma: 0.999996
 amp: false
 val_batch_size: 50
 device: cuda
-num_iters: 250000
-save_iters: [10000, 50000, 100000, 200000]
-valid_freq: 1000
-sample_freq: 10000
+num_iters: 50000
+save_iters: [1000, 5000, 10000, 20000]
+valid_freq: 100
+sample_freq: 1000
 num_workers: 32
 val_idx: [0, 1, 2, 3, 4, 5, 6, 7]
 seed: 0
