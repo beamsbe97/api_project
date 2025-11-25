@@ -87,12 +87,12 @@ AudioDataset.without_replacement: true
 train/build_dataset.folders:
   
   music_hq:
-    - /data/s4403290/api_data/api_data/train
+    - /data/s4561341/api_data/api_data/train
 val/build_dataset.folders:
   music_hq:
-    - /data/s4403290/api_data/api_data/val
+    - /data/s4561341/api_data/api_data/val
 
 test/build_dataset.folders:
   
   music_hq:
-    - /data/s4403290/api_data/api_data/test
+    - /data/s4561341/api_data/api_data/test
