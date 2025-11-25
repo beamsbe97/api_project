@@ -85,14 +85,13 @@ AudioLoader.shuffle: true
 AudioDataset.without_replacement: true
 
 train/build_dataset.folders:
-  
   music_hq:
-    - /data/s4561341/api_data/api_data/train
+    - /data/s4561341/api/wav/train
+
 val/build_dataset.folders:
   music_hq:
-    - /data/s4561341/api_data/api_data/val
+    - /data/s4561341/api/wav/val
 
 test/build_dataset.folders:
-  
   music_hq:
-    - /data/s4561341/api_data/api_data/test
+    - /data/s4561341/api/wav/test
