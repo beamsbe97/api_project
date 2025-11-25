@@ -147,10 +147,10 @@ class Decoder(nn.Module):
 class DAC(BaseModel, CodecMixin):
     def __init__(
         self,
-        encoder_dim: int = 64,
+        encoder_dim: int = 32,  # reduced from 64
         encoder_rates: List[int] = [2, 4, 8, 8],
         latent_dim: int = None,
-        decoder_dim: int = 1536,
+        decoder_dim: int = 384,  # reduced from 1536
         decoder_rates: List[int] = [8, 8, 4, 2],
         n_codebooks: int = 9,
         codebook_size: int = 1024,
