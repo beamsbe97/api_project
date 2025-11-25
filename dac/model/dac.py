@@ -147,10 +147,10 @@ class Decoder(nn.Module):
 class DAC(BaseModel, CodecMixin):
     def __init__(
         self,
-        encoder_dim: int = 64,
+        encoder_dim: int = 32,                 # MODIFIED: Was 64
         encoder_rates: List[int] = [2, 4, 8, 8],
         latent_dim: int = None,
-        decoder_dim: int = 1536,
+        decoder_dim: int = 768,                # MODIFIED: Was 1536
         decoder_rates: List[int] = [8, 8, 4, 2],
         n_codebooks: int = 9,
         codebook_size: int = 1024,
@@ -214,7 +214,7 @@ class DAC(BaseModel, CodecMixin):
         """Encode given audio data and return quantized latent codes
 
         Parameters
-        ----------
+----------
         audio_data : Tensor[B x 1 x T]
             Audio data to encode
         n_quantizers : int, optional
@@ -222,7 +222,7 @@ class DAC(BaseModel, CodecMixin):
             If None, all quantizers are used.
 
         Returns
-        -------
+-------
         dict
             A dictionary with the following keys:
             "z" : Tensor[B x D x T]
@@ -250,14 +250,14 @@ class DAC(BaseModel, CodecMixin):
         """Decode given latent codes and return audio data
 
         Parameters
-        ----------
+----------
         z : Tensor[B x D x T]
             Quantized continuous representation of input
         length : int, optional
             Number of samples in output audio, by default None
 
         Returns
-        -------
+-------
         dict
             A dictionary with the following keys:
             "audio" : Tensor[B x 1 x length]
@@ -274,7 +274,7 @@ class DAC(BaseModel, CodecMixin):
         """Model forward pass
 
         Parameters
-        ----------
+----------
         audio_data : Tensor[B x 1 x T]
             Audio data to encode
         sample_rate : int, optional
@@ -285,7 +285,7 @@ class DAC(BaseModel, CodecMixin):
             If None, all quantizers are used.
 
         Returns
-        -------
+-------
         dict
             A dictionary with the following keys:
             "z" : Tensor[B x D x T]
