@@ -10,7 +10,7 @@ from audiotools import AudioSignal
 from audiotools import metrics
 from audiotools.core import util
 from audiotools.ml.decorators import Tracker
-from train import losses
+from .train import losses
 
 
 @dataclass
