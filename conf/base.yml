@@ -6,9 +6,9 @@ DAC.decoder_dim: 1536
 DAC.decoder_rates: [8, 8, 4, 2]
 
 # Quantization
-DAC.n_codebooks: 9
-DAC.codebook_size: 1024
-DAC.codebook_dim: 8
+DAC.n_codebooks: 4 #decreased from 9
+DAC.codebook_size: 512 #decreased from 1024
+DAC.codebook_dim: 8 #Could  be decreased later on but shoudl have minimal impact on the actual compelxty
 DAC.quantizer_dropout: 1.0
 
 # Discriminator
@@ -29,7 +29,7 @@ AdamW.lr: 0.0001
 ExponentialLR.gamma: 0.999996
 
 amp: false
-val_batch_size: 100
+val_batch_size: 2 #from 50 because cuda
 device: cuda
 num_iters: 50000
 save_iters: [1000, 5000, 10000, 20000]
@@ -69,7 +69,7 @@ MelSpectrogramLoss.clamp_eps: 1.0e-5
 MelSpectrogramLoss.mag_weight: 0.0
 
 # Data
-batch_size: 72
+batch_size: 4 #from 72
 train/AudioDataset.duration: 0.38
 train/AudioDataset.n_examples: 10000000
 
