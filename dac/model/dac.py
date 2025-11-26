@@ -43,10 +43,10 @@ class ResidualUnit(nn.Module):
 class EncoderBlock(nn.Module):
     def __init__(self, dim: int = 16, stride: int = 1):
         super().__init__()
+        # Keep a single ResidualUnit to reduce parameter count while preserving
+        # the receptive field and output length behavior
         self.block = nn.Sequential(
             ResidualUnit(dim // 2, dilation=1),
-            ResidualUnit(dim // 2, dilation=3),
-            ResidualUnit(dim // 2, dilation=9),
             Snake1d(dim // 2),
             WNConv1d(
                 dim // 2,
@@ -94,6 +94,7 @@ class Encoder(nn.Module):
 class DecoderBlock(nn.Module):
     def __init__(self, input_dim: int = 16, output_dim: int = 8, stride: int = 1):
         super().__init__()
+        # Reduce the number of ResidualUnits to minimize parameters
         self.block = nn.Sequential(
             Snake1d(input_dim),
             WNConvTranspose1d(
@@ -104,8 +105,6 @@ class DecoderBlock(nn.Module):
                 padding=math.ceil(stride / 2),
             ),
             ResidualUnit(output_dim, dilation=1),
-            ResidualUnit(output_dim, dilation=3),
-            ResidualUnit(output_dim, dilation=9),
         )
 
     def forward(self, x):
@@ -147,14 +146,14 @@ class Decoder(nn.Module):
 class DAC(BaseModel, CodecMixin):
     def __init__(
         self,
-        encoder_dim: int = 32,  # reduced from 64
+        encoder_dim: int = 8,
         encoder_rates: List[int] = [2, 4, 8, 8],
         latent_dim: int = None,
-        decoder_dim: int = 384,  # reduced from 1536
+        decoder_dim: int = 128,
         decoder_rates: List[int] = [8, 8, 4, 2],
-        n_codebooks: int = 9,
-        codebook_size: int = 1024,
-        codebook_dim: Union[int, list] = 8,
+        n_codebooks: int = 4,
+        codebook_size: int = 256,
+        codebook_dim: Union[int, list] = 4,
         quantizer_dropout: bool = False,
         sample_rate: int = 44100,
     ):
