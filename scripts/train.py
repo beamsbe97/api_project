@@ -264,6 +264,8 @@ def train_loop(state, batch, accel, lambdas):
         output["vq/codebook_loss"] = codebook_loss
         output["loss"] = sum([v * output[k] for k, v in lambdas.items() if k in output])
 
+    if output["loss"].ndim > 0:
+        output["loss"] = output["loss"].mean()
     state.optimizer_g.zero_grad()
     accel.backward(output["loss"])
     accel.scaler.unscale_(state.optimizer_g)
