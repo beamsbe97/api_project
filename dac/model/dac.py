@@ -9,7 +9,8 @@ from audiotools.ml import BaseModel
 from torch import nn
 
 from .base import CodecMixin
-from dac.nn.layers import Snake1d
+# Removed Snake1d to save parameters
+# from dac.nn.layers import Snake1d
 from dac.nn.layers import WNConv1d
 from dac.nn.layers import WNConvTranspose1d
 from dac.nn.quantize import ResidualVectorQuantize
@@ -21,39 +22,21 @@ def init_weights(m):
         nn.init.constant_(m.bias, 0)
 
 
-class ResidualUnit(nn.Module):
-    def __init__(self, dim: int = 16, dilation: int = 1):
-        super().__init__()
-        pad = ((7 - 1) * dilation) // 2
-        self.block = nn.Sequential(
-            Snake1d(dim),
-            WNConv1d(dim, dim, kernel_size=7, dilation=dilation, padding=pad),
-            Snake1d(dim),
-            WNConv1d(dim, dim, kernel_size=1),
-        )
-
-    def forward(self, x):
-        y = self.block(x)
-        pad = (x.shape[-1] - y.shape[-1]) // 2
-        if pad > 0:
-            x = x[..., pad:-pad]
-        return x + y
+# ResidualUnit class removed entirely for weight reduction
 
 
 class EncoderBlock(nn.Module):
     def __init__(self, dim: int = 16, stride: int = 1):
         super().__init__()
-        # Keep a single ResidualUnit to reduce parameter count while preserving
-        # the receptive field and output length behavior
+        # EXTREMELY LIGHTWEIGHT: No ResidualUnit, ELU activation, minimal kernel
         self.block = nn.Sequential(
-            ResidualUnit(dim // 2, dilation=1),
-            Snake1d(dim // 2),
+            nn.ELU(),
             WNConv1d(
                 dim // 2,
                 dim,
-                kernel_size=2 * stride,
+                kernel_size=stride,  # Minimal kernel size (no overlap)
                 stride=stride,
-                padding=math.ceil(stride / 2),
+                padding=0,
             ),
         )
 
@@ -64,26 +47,26 @@ class EncoderBlock(nn.Module):
 class Encoder(nn.Module):
     def __init__(
         self,
-        d_model: int = 64,
-        strides: list = [2, 4, 8, 8],
+        d_model: int = 4,
+        strides: list = [2, 4],
         d_latent: int = 64,
     ):
         super().__init__()
-        # Create first convolution
-        self.block = [WNConv1d(1, d_model, kernel_size=7, padding=3)]
+        # Create first convolution (Kernel 3 instead of 7)
+        self.block = [WNConv1d(1, d_model, kernel_size=3, padding=1)]
 
-        # Create EncoderBlocks that double channels as they downsample by `stride`
+        # Create EncoderBlocks
         for stride in strides:
             d_model *= 2
             self.block += [EncoderBlock(d_model, stride=stride)]
 
         # Create last convolution
         self.block += [
-            Snake1d(d_model),
+            nn.ELU(),
             WNConv1d(d_model, d_latent, kernel_size=3, padding=1),
         ]
 
-        # Wrap black into nn.Sequential
+        # Wrap block into nn.Sequential
         self.block = nn.Sequential(*self.block)
         self.enc_dim = d_model
 
@@ -94,17 +77,16 @@ class Encoder(nn.Module):
 class DecoderBlock(nn.Module):
     def __init__(self, input_dim: int = 16, output_dim: int = 8, stride: int = 1):
         super().__init__()
-        # Reduce the number of ResidualUnits to minimize parameters
+        # EXTREMELY LIGHTWEIGHT: No ResidualUnit, ELU activation
         self.block = nn.Sequential(
-            Snake1d(input_dim),
+            nn.ELU(),
             WNConvTranspose1d(
                 input_dim,
                 output_dim,
-                kernel_size=2 * stride,
+                kernel_size=stride,
                 stride=stride,
-                padding=math.ceil(stride / 2),
+                padding=0,
             ),
-            ResidualUnit(output_dim, dilation=1),
         )
 
     def forward(self, x):
@@ -121,10 +103,10 @@ class Decoder(nn.Module):
     ):
         super().__init__()
 
-        # Add first conv layer
-        layers = [WNConv1d(input_channel, channels, kernel_size=7, padding=3)]
+        # Add first conv layer (Kernel 3 instead of 7)
+        layers = [WNConv1d(input_channel, channels, kernel_size=3, padding=1)]
 
-        # Add upsampling + MRF blocks
+        # Add upsampling blocks
         for i, stride in enumerate(rates):
             input_dim = channels // 2**i
             output_dim = channels // 2 ** (i + 1)
@@ -132,8 +114,8 @@ class Decoder(nn.Module):
 
         # Add final conv layer
         layers += [
-            Snake1d(output_dim),
-            WNConv1d(output_dim, d_out, kernel_size=7, padding=3),
+            nn.ELU(),
+            WNConv1d(output_dim, d_out, kernel_size=3, padding=1),
             nn.Tanh(),
         ]
 
@@ -146,14 +128,14 @@ class Decoder(nn.Module):
 class DAC(BaseModel, CodecMixin):
     def __init__(
         self,
-        encoder_dim: int = 8,
-        encoder_rates: List[int] = [2, 4, 8, 8],
+        encoder_dim: int = 4,         # Default: 64 -> 4
+        encoder_rates: List[int] = [2, 4], # Default: [2, 4, 8, 8] -> [2, 4]
         latent_dim: int = None,
-        decoder_dim: int = 128,
-        decoder_rates: List[int] = [8, 8, 4, 2],
-        n_codebooks: int = 4,
-        codebook_size: int = 256,
-        codebook_dim: Union[int, list] = 4,
+        decoder_dim: int = 16,        # Default: 128 -> 16
+        decoder_rates: List[int] = [4, 2], # Default: [8, 8, 4, 2] -> [4, 2]
+        n_codebooks: int = 1,         # Default: 9 -> 1
+        codebook_size: int = 32,      # Default: 1024 -> 32
+        codebook_dim: Union[int, list] = 2, # Default: 8 -> 2
         quantizer_dropout: bool = False,
         sample_rate: int = 44100,
     ):
@@ -358,6 +340,3 @@ if __name__ == "__main__":
     rf = (gradmap != 0).sum()
 
     print(f"Receptive field: {rf.item()}")
-
-    x = AudioSignal(torch.randn(1, 1, 44100 * 60), 44100)
-    model.decompress(model.compress(x, verbose=True), verbose=True)
