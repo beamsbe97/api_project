@@ -388,6 +388,17 @@ def train(
         batch_size=batch_size,
         collate_fn=state.train_data.collate,
     )
+    if accel.local_rank == 0:
+        gen_params = sum(p.numel() for p in state.generator.parameters() if p.requires_grad)
+        disc_params = sum(p.numel() for p in state.discriminator.parameters() if p.requires_grad)
+
+        print("-" * 40)
+        print(f"Generator Parameters:     {gen_params:,}")
+        print(f"Discriminator Parameters: {disc_params:,}")
+        print(f"Total Parameters:         {gen_params + disc_params:,}")
+        print("-" * 40)
+    
+    return
     train_dataloader = get_infinite_loader(train_dataloader)
     val_dataloader = accel.prepare_dataloader(
         state.val_data,

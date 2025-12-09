@@ -1,13 +1,13 @@
 # Model setup
 DAC.sample_rate: 44100
-DAC.encoder_dim: 64
+DAC.encoder_dim: 8
 DAC.encoder_rates: [2, 4, 8, 8]
-DAC.decoder_dim: 1536
+DAC.decoder_dim: 128
 DAC.decoder_rates: [8, 8, 4, 2]
 
 # Quantization
-DAC.n_codebooks: 9
-DAC.codebook_size: 1024
+DAC.n_codebooks: 4
+DAC.codebook_size: 512
 DAC.codebook_dim: 8
 DAC.quantizer_dropout: 1.0
 
