@@ -27,6 +27,8 @@ def load_dac_model(checkpoint_path: str, device: torch.device) -> DAC:
     print(f"Loading DAC checkpoint from: {checkpoint_path}")
     model = DAC().to(device)
 
+    
+
     ckpt = torch.load(checkpoint_path, map_location=device)
 
     # Handle both pure state_dict or dict with "state_dict"
