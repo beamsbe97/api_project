@@ -22,12 +22,8 @@ import dac
 torch.cuda.empty_cache()
 warnings.filterwarnings("ignore", category=UserWarning)
 
-# Enable cudnn autotuner to speed up training
-# (can be altered by the funcs.seed function)
 torch.backends.cudnn.benchmark = bool(int(os.getenv("CUDNN_BENCHMARK", 1)))
-# Uncomment to trade memory for speed.
 
-# Optimizers
 AdamW = argbind.bind(torch.optim.AdamW, "generator", "discriminator")
 Accelerator = argbind.bind(ml.Accelerator, without_prefix=True)
 
@@ -37,15 +33,12 @@ def ExponentialLR(optimizer, gamma: float = 1.0):
     return torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma)
 
 
-# Models
 DAC = argbind.bind(dac.model.DAC)
 Discriminator = argbind.bind(dac.model.Discriminator)
 
-# Data
 AudioDataset = argbind.bind(AudioDataset, "train", "val")
 AudioLoader = argbind.bind(AudioLoader, "train", "val")
 
-# Transforms
 filter_fn = lambda fn: hasattr(fn, "transform") and fn.__qualname__ not in [
     "BaseTransform",
     "Compose",
@@ -84,10 +77,6 @@ def build_dataset(
     sample_rate: int,
     folders: dict = None,
 ):
-    # Give one loader per key/value of dictionary, where
-    # value is a list of folders. Create a dataset for each one.
-    # Concatenate the datasets with ConcatDataset, which
-    # cycles through them.
     datasets = []
     for _, v in folders.items():
         loader = AudioLoader(sources=v)
@@ -342,7 +331,6 @@ def save_samples(state, val_idx, writer):
 def validate(state, val_dataloader, accel):
     for batch in val_dataloader:
         output = val_loop(batch, state, accel)
-    # Consolidate state dicts if using ZeroRedundancyOptimizer
     if hasattr(state.optimizer_g, "consolidate_state_dict"):
         state.optimizer_g.consolidate_state_dict()
         state.optimizer_d.consolidate_state_dict()
@@ -399,48 +387,6 @@ def train(
         print("-" * 40)
     
     return
-    train_dataloader = get_infinite_loader(train_dataloader)
-    val_dataloader = accel.prepare_dataloader(
-        state.val_data,
-        start_idx=0,
-        num_workers=num_workers,
-        batch_size=val_batch_size,
-        collate_fn=state.val_data.collate,
-        persistent_workers=True if num_workers > 0 else False,
-    )
-
-    # Wrap the functions so that they neatly track in TensorBoard + progress bars
-    # and only run when specific conditions are met.
-    global train_loop, val_loop, validate, save_samples, checkpoint
-    train_loop = tracker.log("train", "value", history=False)(
-        tracker.track("train", num_iters, completed=state.tracker.step)(train_loop)
-    )
-    val_loop = tracker.track("val", len(val_dataloader))(val_loop)
-    validate = tracker.log("val", "mean")(validate)
-
-    # These functions run only on the 0-rank process
-    save_samples = when(lambda: accel.local_rank == 0)(save_samples)
-    checkpoint = when(lambda: accel.local_rank == 0)(checkpoint)
-
-    with tracker.live:
-        for tracker.step, batch in enumerate(train_dataloader, start=tracker.step):
-            train_loop(state, batch, accel, lambdas)
-
-            last_iter = (
-                tracker.step == num_iters - 1 if num_iters is not None else False
-            )
-            if tracker.step % sample_freq == 0 or last_iter:
-                save_samples(state, val_idx, writer)
-
-            if tracker.step % valid_freq == 0 or last_iter:
-                validate(state, val_dataloader, accel)
-                checkpoint(state, save_iters, save_path)
-                # Reset validation progress bar, print summary since last validation.
-                tracker.done("val", f"Iteration {tracker.step}")
-
-            if last_iter:
-                break
-
 
 if __name__ == "__main__":
     args = argbind.parse_args()
